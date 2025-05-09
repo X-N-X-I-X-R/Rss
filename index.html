@@ -1,58 +1,83 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Regulatory Feed Dashboard</title>
   <style>
-    body { font-family: Arial, sans-serif; background-color: #f7f7f7; padding: 2rem; }
-    h1 { color: #2c3e50; }
-    .feed-block { margin-bottom: 2rem; }
-    ul { list-style: none; padding-left: 0; }
-    li { margin: 0.5rem 0; }
-    a { color: #007acc; text-decoration: none; }
+    body { font-family: Arial, sans-serif; background: #f2f2f2; color: #222; margin: 0; padding: 2rem; }
+    h1 { color: #2c3e50; margin-top: 0; }
+    h2 { color: #444; }
+    .feed-block { margin-bottom: 3rem; }
+    ul { list-style: none; padding: 0; }
+    li { margin-bottom: 0.5rem; }
+    a { text-decoration: none; color: #0077cc; }
     a:hover { text-decoration: underline; }
     small { color: #888; }
+    input[type="text"] {
+      padding: 0.5rem; margin-bottom: 2rem; width: 100%; max-width: 400px;
+      border: 1px solid #ccc; border-radius: 4px;
+    }
+    .hidden { display: none; }
   </style>
 </head>
 <body>
-  <h1>Regulatory Feed Dashboard</h1>
+  <h1>Global Regulatory Feed</h1>
 
-  <div class="feed-block" id="sec-feed">
-    <h2>SEC – Proposed Rules</h2>
-    <ul id="sec-list">Loading...</ul>
-  </div>
+  <input type="text" id="search" placeholder="Search keyword e.g. disclosure, 13F, enforcement..." oninput="filterFeeds()" />
 
-  <div class="feed-block" id="esma-feed">
-    <h2>ESMA – News</h2>
-    <ul id="esma-list">Loading...</ul>
-  </div>
-
-  <div class="feed-block" id="cftc-feed">
-    <h2>CFTC – Updates</h2>
-    <ul id="cftc-list">Loading...</ul>
-  </div>
+  <div id="feeds"></div>
 
   <script>
-    async function loadFeed(rssUrl, containerId) {
-      const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`;
-      try {
-        const res = await fetch(apiUrl);
-        const data = await res.json();
-        const list = document.getElementById(containerId);
-        list.innerHTML = "";
-        data.items.slice(0, 10).forEach(item => {
-          const li = document.createElement("li");
-          li.innerHTML = `<a href="${item.link}" target="_blank">${item.title}</a><br><small>${item.pubDate}</small>`;
-          list.appendChild(li);
-        });
-      } catch (e) {
-        document.getElementById(containerId).innerHTML = "<li>Failed to load feed.</li>";
+    const sources = [
+      { name: "SEC – Proposed Rules", url: "https://www.sec.gov/rss/rules-proposed.xml" },
+      { name: "SEC – Final Rules", url: "https://www.sec.gov/rss/rules-final.xml" },
+      { name: "CFTC – Updates", url: "https://www.cftc.gov/rss.xml" },
+      { name: "ESMA – News", url: "https://www.esma.europa.eu/feeds/news" },
+      { name: "FINRA – Regulatory Notices", url: "https://www.finra.org/rss-feed/41006/rss.xml" },
+      { name: "Federal Reserve – Press", url: "https://www.federalreserve.gov/feeds/press_all.xml" },
+      { name: "CFPB – Consumer Finance Blog", url: "https://www.consumerfinance.gov/feeds/blog/" },
+      { name: "EIOPA – Insurance and Pensions", url: "https://www.eiopa.europa.eu/rss.xml" }
+    ];
+
+    const feedsContainer = document.getElementById("feeds");
+
+    async function loadFeeds() {
+      for (const source of sources) {
+        const api = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(source.url)}`;
+        try {
+          const res = await fetch(api);
+          const data = await res.json();
+
+          const block = document.createElement("div");
+          block.className = "feed-block";
+          block.innerHTML = `<h2>${source.name}</h2><ul id="${source.name}"></ul>`;
+          feedsContainer.appendChild(block);
+
+          const list = block.querySelector("ul");
+          data.items.slice(0, 10).forEach(item => {
+            const li = document.createElement("li");
+            li.classList.add("feed-item");
+            li.innerHTML = `<a href="${item.link}" target="_blank">${item.title}</a><br><small>${item.pubDate}</small>`;
+            list.appendChild(li);
+          });
+
+        } catch (err) {
+          console.error(`Error loading ${source.name}:`, err);
+        }
       }
     }
 
-    loadFeed("https://www.sec.gov/rss/rules-proposed.xml", "sec-list");
-    loadFeed("https://www.esma.europa.eu/feeds/news", "esma-list");
-    loadFeed("https://www.cftc.gov/rss.xml", "cftc-list");
+    function filterFeeds() {
+      const keyword = document.getElementById("search").value.toLowerCase();
+      const items = document.querySelectorAll(".feed-item");
+      items.forEach(item => {
+        const text = item.textContent.toLowerCase();
+        item.style.display = keyword === "" || text.includes(keyword) ? "block" : "none";
+      });
+    }
+
+    loadFeeds();
   </script>
 </body>
 </html>
