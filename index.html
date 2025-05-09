@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Regulatory Feed Dashboard</title>
+  <title>Global Regulatory Feed</title>
   <style>
-    body { font-family: Arial, sans-serif; background: #f2f2f2; color: #222; margin: 0; padding: 2rem; }
+    body { font-family: Arial, sans-serif; background: #f7f7f7; color: #222; padding: 2rem; }
     h1 { color: #2c3e50; margin-top: 0; }
     h2 { color: #444; }
     .feed-block { margin-bottom: 3rem; }
@@ -18,22 +18,21 @@
       padding: 0.5rem; margin-bottom: 2rem; width: 100%; max-width: 400px;
       border: 1px solid #ccc; border-radius: 4px;
     }
-    .hidden { display: none; }
   </style>
 </head>
 <body>
   <h1>Global Regulatory Feed</h1>
-
-  <input type="text" id="search" placeholder="Search keyword e.g. disclosure, 13F, enforcement..." oninput="filterFeeds()" />
+  <input type="text" id="search" placeholder="Search keyword... (e.g. disclosure, short, rule)" oninput="filterFeeds()" />
 
   <div id="feeds"></div>
 
   <script>
     const sources = [
-      { name: "SEC – Proposed Rules", url: "https://www.sec.gov/rss/rules-proposed.xml" },
       { name: "CFTC – Press Releases", url: "https://www.cftc.gov/rss.xml" },
       { name: "ESMA – News", url: "https://www.esma.europa.eu/feeds/news" },
-      { name: "EIOPA – Newsroom", url: "https://www.eiopa.europa.eu/rss.xml" }
+      { name: "EIOPA – Newsroom", url: "https://www.eiopa.europa.eu/rss.xml" },
+      { name: "NFA – News Releases", url: "https://www.nfa.futures.org/news/newsRSS.asp" },
+      { name: "SEC – Press Releases", url: "https://www.sec.gov/rss/press.xml" }
     ];
 
     const feedsContainer = document.getElementById("feeds");
@@ -59,7 +58,9 @@
           });
 
         } catch (err) {
-          console.error(`Error loading ${source.name}:`, err);
+          const errorBlock = document.createElement("p");
+          errorBlock.textContent = `⚠️ Failed to load ${source.name}`;
+          feedsContainer.appendChild(errorBlock);
         }
       }
     }
