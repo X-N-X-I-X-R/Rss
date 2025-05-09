@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Regulatory Feed Dashboard</title>
+  <style>
+    body { font-family: Arial, sans-serif; background-color: #f7f7f7; padding: 2rem; }
+    h1 { color: #2c3e50; }
+    .feed-block { margin-bottom: 2rem; }
+    ul { list-style: none; padding-left: 0; }
+    li { margin: 0.5rem 0; }
+    a { color: #007acc; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    small { color: #888; }
+  </style>
+</head>
+<body>
+  <h1>Regulatory Feed Dashboard</h1>
+
+  <div class="feed-block" id="sec-feed">
+    <h2>SEC – Proposed Rules</h2>
+    <ul id="sec-list">Loading...</ul>
+  </div>
+
+  <div class="feed-block" id="esma-feed">
+    <h2>ESMA – News</h2>
+    <ul id="esma-list">Loading...</ul>
+  </div>
+
+  <div class="feed-block" id="cftc-feed">
+    <h2>CFTC – Updates</h2>
+    <ul id="cftc-list">Loading...</ul>
+  </div>
+
+  <script>
+    async function loadFeed(rssUrl, containerId) {
+      const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`;
+      try {
+        const res = await fetch(apiUrl);
+        const data = await res.json();
+        const list = document.getElementById(containerId);
+        list.innerHTML = "";
+        data.items.slice(0, 10).forEach(item => {
+          const li = document.createElement("li");
+          li.innerHTML = `<a href="${item.link}" target="_blank">${item.title}</a><br><small>${item.pubDate}</small>`;
+          list.appendChild(li);
+        });
+      } catch (e) {
+        document.getElementById(containerId).innerHTML = "<li>Failed to load feed.</li>";
+      }
+    }
+
+    loadFeed("https://www.sec.gov/rss/rules-proposed.xml", "sec-list");
+    loadFeed("https://www.esma.europa.eu/feeds/news", "esma-list");
+    loadFeed("https://www.cftc.gov/rss.xml", "cftc-list");
+  </script>
+</body>
+</html>
